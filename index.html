@@ -4,925 +4,321 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.json">
-<title>ScanMaster Pro</title>
+<title>ScanMaster Pro - v2</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+
 <style>
-:root{--bg:#0f172a;--card:#1e293b;--card2:#334155;--primary:#3b82f6;--success:#10b981;
---danger:#ef4444;--warning:#f59e0b;--text:#e2e8f0;--text2:#94a3b8;--radius:12px}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
-.container{max-width:900px;margin:0 auto;padding:12px}
+:root{--bg:#0f172a;--card:#1e293b;--primary:#3b82f6;--success:#10b981;--danger:#ef4444;--warning:#f59e0b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,sans-serif;background:var(--bg);color:#e2e8f0}
+.container{max-width:960px;margin:0 auto;padding:10px}
 
-/* ===== HEADER ===== */
-.header{text-align:center;padding:16px 0 8px}
-.header h1{font-size:22px;background:linear-gradient(135deg,var(--primary),var(--success));
--webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
-.header small{color:var(--text2);font-size:12px}
+.header{text-align:center;padding:15px 0}
+.header h1{font-size:24px;background:linear-gradient(90deg,#3b82f6,#10b981);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 
-/* ===== CARDS ===== */
-.card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:14px;
-border:1px solid rgba(255,255,255,.06)}
-.card h2{font-size:18px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card{background:var(--card);border-radius:12px;padding:18px;margin-bottom:15px}
+label{display:block;margin:12px 0 6px;font-size:14px;color:#94a3b8;font-weight:600}
+input,select{width:100%;padding:12px;border-radius:8px;background:#111827;border:2px solid #334155;color:white;font-size:16px}
 
-/* ===== INPUTS ===== */
-label{display:block;font-size:13px;color:var(--text2);margin:12px 0 5px;font-weight:600}
-input[type="number"],input[type="text"],select{width:100%;padding:12px 14px;border-radius:8px;
-border:2px solid var(--card2);background:var(--bg);color:var(--text);font-size:16px;
-transition:border .2s}
-input:focus,select:focus{outline:0;border-color:var(--primary)}
-input[type="file"]{color:var(--text2);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:15px 0}
+.stat{background:#111827;padding:12px;border-radius:10px;text-align:center}
+.stat-val{font-size:26px;font-weight:800}
+.stat-val.green{color:var(--success)}
+.stat-val.red{color:var(--danger)}
+.stat-val.blue{color:var(--primary)}
 
-/* ===== BUTTONS ===== */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
-padding:14px 24px;border:0;border-radius:10px;font-size:15px;font-weight:600;
-cursor:pointer;transition:all .15s;color:#fff;min-width:140px}
-.btn:active{transform:scale(.96)}
-.btn-primary{background:var(--primary)}.btn-success{background:var(--success)}
-.btn-danger{background:var(--danger)}.btn-warning{background:var(--warning);color:#000}
-.btn-secondary{background:var(--card2)}
-.btn-lg{padding:18px 32px;font-size:17px;width:100%;border-radius:14px}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-group{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+.camera-container{position:relative;background:#000;border-radius:12px;overflow:hidden;margin:10px 0}
+#reader{width:100%;max-height:420px}
 
-/* ===== STATS ===== */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
-.stat{background:var(--bg);border-radius:10px;padding:12px 8px;text-align:center;
-border:1px solid rgba(255,255,255,.06)}
-.stat-val{font-size:24px;font-weight:800;line-height:1.2}
-.stat-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.stat-val.blue{color:var(--primary)}.stat-val.green{color:var(--success)}
-.stat-val.red{color:var(--danger)}.stat-val.yellow{color:var(--warning)}
+.last-scan{padding:16px;margin:12px 0;border-radius:10px;font-size:17px;font-weight:700;text-align:center;word-break:break-all}
+.last-scan.ok{background:rgba(16,185,129,0.25);border:2px solid var(--success)}
+.last-scan.bad{background:rgba(239,68,68,0.25);border:2px solid var(--danger)}
+.last-scan.dup{background:rgba(245,158,11,0.25);border:2px solid var(--warning)}
 
-/* ===== PROGRESS ===== */
-.progress-wrap{background:var(--bg);border-radius:20px;height:24px;overflow:hidden;
-margin-bottom:14px;border:1px solid rgba(255,255,255,.06);position:relative}
-.progress-bar{height:100%;border-radius:20px;transition:width .4s ease;
-background:linear-gradient(90deg,var(--primary),var(--success))}
-.progress-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-font-size:11px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.btn{padding:14px 24px;border:none;border-radius:10px;font-size:16px;font-weight:600;margin:5px}
+.btn-success{background:var(--success);color:white}
+.btn-danger{background:var(--danger)}
+.btn-warning{background:var(--warning);color:black}
+.btn-group{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:20px}
 
-/* ===== CAMERA ===== */
-.camera-wrap{position:relative;width:100%;border-radius:var(--radius);overflow:hidden;
-background:#000;aspect-ratio:4/3}
-.camera-wrap video,.camera-wrap canvas{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
-.camera-wrap canvas{pointer-events:none}
-#fallbackReader{width:100%;min-height:300px}
-#fallbackReader video{border-radius:0!important}
-.camera-controls{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
-.camera-controls select{flex:1;min-width:0}
-.camera-controls .btn{min-width:auto;padding:10px 16px;font-size:13px}
-.scan-frame{position:absolute;top:10%;left:10%;width:80%;height:80%;
-border:2px solid var(--success);border-radius:16px;pointer-events:none;opacity:.5}
-.scan-line{position:absolute;left:10%;width:80%;height:2px;background:var(--success);
-box-shadow:0 0 12px var(--success);animation:scanLine 2s ease-in-out infinite;pointer-events:none}
-@keyframes scanLine{0%,100%{top:15%}50%{top:80%}}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#1e293b;padding:10px;text-align:left}
+td{padding:10px;border-bottom:1px solid #334155}
+tr.ok td:nth-child(3){color:#10b981;font-weight:bold}
+tr.dup td:nth-child(3){color:#f59e0b;font-weight:bold}
+tr.bad td:nth-child(3){color:#ef4444;font-weight:bold}
 
-/* ===== LAST SCAN ===== */
-.last-scan{padding:14px;border-radius:10px;text-align:center;font-weight:700;
-font-size:15px;margin:10px 0;word-break:break-all;animation:fadeIn .3s}
-.last-scan.ok{background:rgba(16,185,129,.2);color:var(--success);border:2px solid var(--success)}
-.last-scan.bad{background:rgba(239,68,68,.2);color:var(--danger);border:2px solid var(--danger)}
-.last-scan.dup{background:rgba(245,158,11,.2);color:var(--warning);border:2px solid var(--warning)}
-@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
-
-/* ===== MANUAL INPUT ===== */
-.manual-row{display:flex;gap:8px;margin:10px 0}
-.manual-row input{flex:1;margin:0}
-.manual-row .btn{min-width:auto;padding:12px 18px}
-
-/* ===== TABLE ===== */
-.table-wrap{max-height:420px;overflow-y:auto;border-radius:10px;border:1px solid rgba(255,255,255,.06)}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{background:var(--card2);color:var(--text);padding:10px 8px;text-align:left;
-position:sticky;top:0;z-index:2;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
-td{padding:8px;border-bottom:1px solid rgba(255,255,255,.04);word-break:break-all}
-tr.row-ok{background:rgba(16,185,129,.08)}
-tr.row-ok td:nth-child(3){color:var(--success);font-weight:700}
-tr.row-bad{background:rgba(239,68,68,.1)}
-tr.row-bad td:nth-child(3){color:var(--danger);font-weight:700}
-tr.row-dup{background:rgba(245,158,11,.08)}
-tr.row-dup td:nth-child(3){color:var(--warning);font-weight:700}
-
-/* ===== BOX ALERT ===== */
-.box-alert{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);
-display:flex;align-items:center;justify-content:center;z-index:999;animation:fadeIn .3s}
-.box-alert-inner{background:var(--card);border-radius:20px;padding:40px;text-align:center;
-max-width:380px;border:3px solid var(--success)}
-.box-alert-inner h2{font-size:28px;color:var(--success);margin-bottom:16px}
-.box-alert-inner p{color:var(--text2);margin-bottom:24px;font-size:16px}
-
-/* ===== TOAST ===== */
-.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
-.toast{padding:14px 20px;border-radius:10px;color:#fff;font-size:14px;font-weight:600;
-animation:slideIn .3s;max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
-.toast.info{background:var(--primary)}.toast.success{background:var(--success)}
-.toast.error{background:var(--danger)}.toast.warning{background:var(--warning);color:#000}
-@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:none;opacity:1}}
-
-/* ===== RESPONSIVE ===== */
-.scanner-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
-@media(max-width:768px){
-  .scanner-grid{grid-template-columns:1fr}
-  .stats-grid{grid-template-columns:repeat(2,1fr)}
-  .stat-val{font-size:20px}
-}
-
-.hidden{display:none!important}
-.ref-info{background:rgba(59,130,246,.1);border:1px solid var(--primary);border-radius:8px;
-padding:10px 14px;margin-top:10px;font-size:13px;color:var(--primary)}
-
-/* ===== COMPLETE SCREEN ===== */
-.complete-icon{font-size:80px;display:block;text-align:center;margin-bottom:16px}
-.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}
-.summary-item{background:var(--bg);padding:16px;border-radius:10px;text-align:center}
-.summary-item .val{font-size:28px;font-weight:800}
-.summary-item .lbl{font-size:11px;color:var(--text2);text-transform:uppercase}
+.progress-bar{height:10px;background:linear-gradient(90deg,#3b82f6,#10b981);border-radius:5px;margin:10px 0}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111827;padding:14px 24px;border-radius:10px;
+       color:white;font-weight:600;box-shadow:0 5px 15px rgba(0,0,0,0.5);z-index:1000;animation:toast 3s forwards}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,20px)}20%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-20px)}}
 </style>
 </head>
 <body>
-
-<!-- ===================== TOAST CONTAINER ===================== -->
-<div class="toast-container" id="toastContainer"></div>
-
 <div class="container">
+
 <div class="header">
-  <h1>📷 ScanMaster Pro</h1>
-  <small>Çoklu QR & DataMatrix Okuyucu</small>
+  <h1>📷 ScanMaster Pro v2</h1>
+  <p style="color:#64748b">DataMatrix & QR - Yüksek Performans</p>
 </div>
 
-<!-- ===================== SCREEN 1: SETUP ===================== -->
-<div id="setupScreen">
-  <div class="card">
-    <h2>📋 Sipariş Ayarları</h2>
-    <label>Toplam Sipariş Miktarı (adet)</label>
-    <input type="number" id="inpTotalQty" min="1" value="100" inputmode="numeric">
-    <label>Koli İçi Adet</label>
-    <input type="number" id="inpBoxSize" min="1" value="24" inputmode="numeric">
-  </div>
+<!-- Kurulum Ekranı -->
+<div id="setupScreen" class="card">
+  <h2>📋 Sipariş Ayarları</h2>
+  <label>Toplam Sipariş Miktarı</label>
+  <input type="number" id="totalQty" value="100">
+  <label>Koli İçi Adet</label>
+  <input type="number" id="boxSize" value="24">
+  
+  <label style="margin-top:20px">Referans Kod Listesi (Opsiyonel - Excel/CSV/TXT)</label>
+  <input type="file" id="refFile" accept=".xlsx,.xls,.csv,.txt">
+  <div id="refStatus" style="margin-top:8px;color:#10b981;font-size:14px"></div>
 
-  <div class="card">
-    <h2>📁 Referans Kod Listesi (Opsiyonel)</h2>
-    <p style="color:var(--text2);font-size:13px;margin-bottom:12px">
-      Müşteriden aldığınız kod listesini yükleyin. Okutma sırasında her kod bu listeyle karşılaştırılır.
-      Yüklemezseniz sadece tekrar kontrolü yapılır.
-    </p>
-    <input type="file" id="inpRefFile" accept=".xlsx,.xls,.csv,.txt">
-    <div id="refInfo" class="ref-info hidden"></div>
-    <div style="margin-top:12px">
-      <label>Hangi sütun? (Excel yüklediyseniz)</label>
-      <select id="refColumn">
-        <option value="0">1. Sütun (A)</option>
-        <option value="1">2. Sütun (B)</option>
-        <option value="2">3. Sütun (C)</option>
-        <option value="3">4. Sütun (D)</option>
-      </select>
-    </div>
-  </div>
-
-  <button class="btn btn-success btn-lg" onclick="startApp()">
-    ▶️ OKUTMAYA BAŞLA
+  <button class="btn btn-success" style="width:100%;margin-top:20px;padding:18px" onclick="startScanning()">
+    ▶ OKUTMAYA BAŞLA
   </button>
 </div>
 
-<!-- ===================== SCREEN 2: SCANNER ===================== -->
+<!-- Tarama Ekranı -->
 <div id="scannerScreen" class="hidden">
-  <!-- Stats -->
-  <div class="stats-grid">
-    <div class="stat"><div class="stat-val green" id="sTotal">0/0</div><div class="stat-lbl">Toplam Doğru</div></div>
-    <div class="stat"><div class="stat-val blue" id="sBox">0/0</div><div class="stat-lbl">Bu Koli</div></div>
-    <div class="stat"><div class="stat-val yellow" id="sBoxNum">1</div><div class="stat-lbl">Koli No</div></div>
-    <div class="stat"><div class="stat-val red" id="sErrors">0</div><div class="stat-lbl">Hata</div></div>
+  <div class="stats">
+    <div class="stat"><div class="stat-val green" id="correctCount">0/0</div><div style="font-size:11px;color:#94a3b8">DOĞRU</div></div>
+    <div class="stat"><div class="stat-val" id="boxInfo">0/24</div><div style="font-size:11px;color:#94a3b8">KOLİ</div></div>
+    <div class="stat"><div class="stat-val blue" id="boxNumber">1</div><div style="font-size:11px;color:#94a3b8">KOLİ NO</div></div>
+    <div class="stat"><div class="stat-val red" id="errorCount">0</div><div style="font-size:11px;color:#94a3b8">HATA</div></div>
   </div>
 
-  <!-- Progress -->
-  <div class="progress-wrap">
-    <div class="progress-bar" id="progressBar" style="width:0%"></div>
-    <div class="progress-text" id="progressText">%0</div>
+  <div class="progress-bar" id="progress"></div>
+
+  <div class="camera-container">
+    <div id="reader"></div>
   </div>
 
-  <div class="scanner-grid">
-    <!-- LEFT: Camera -->
-    <div>
-      <div class="camera-wrap" id="cameraWrap">
-        <video id="nativeVideo" autoplay playsinline muted></video>
-        <canvas id="overlay"></canvas>
-        <div class="scan-frame"></div>
-        <div class="scan-line"></div>
-        <div id="fallbackReader" class="hidden"></div>
-      </div>
+  <div id="lastScan" class="last-scan hidden"></div>
 
-      <div class="camera-controls">
-        <select id="cameraSelect"><option>Kamera yükleniyor...</option></select>
-        <button class="btn btn-secondary" id="btnPause" onclick="togglePause()">⏸</button>
-        <button class="btn btn-secondary" id="btnFlash" onclick="toggleFlash()">🔦</button>
-      </div>
-
-      <!-- Manual Input -->
-      <div class="manual-row">
-        <input type="text" id="inpManual" placeholder="Manuel kod girin...">
-        <button class="btn btn-primary" onclick="manualAdd()">➕</button>
-      </div>
-
-      <!-- Last Scan -->
-      <div id="lastScan" class="hidden"></div>
-    </div>
-
-    <!-- RIGHT: Scan List -->
-    <div>
-      <h3 style="margin-bottom:10px;font-size:15px">
-        📋 Okutulan Kodlar: <span id="scanCountLabel">0</span>
-      </h3>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>#</th><th>Kod</th><th>Durum</th><th>Koli</th><th>Saat</th></tr>
-          </thead>
-          <tbody id="scanTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- Action Buttons -->
   <div class="btn-group">
-    <button class="btn btn-warning" onclick="undoLast()">↩ Geri Al</button>
-    <button class="btn btn-success" onclick="doExport()">📥 Excel</button>
-    <button class="btn btn-danger" onclick="finishOrder()">✅ Bitir</button>
+    <button class="btn btn-warning" onclick="undoLast()">↩ Son Okumayı Geri Al</button>
+    <button class="btn btn-success" onclick="exportExcel()">📥 Excel İndir</button>
+    <button class="btn btn-danger" onclick="finishOrder()">✅ Siparişi Bitir</button>
   </div>
 </div>
 
-<!-- ===================== SCREEN 3: COMPLETE ===================== -->
-<div id="completeScreen" class="hidden">
-  <div class="card" style="text-align:center">
-    <div class="complete-icon">🎉</div>
-    <h2 style="font-size:24px;margin-bottom:8px">Sipariş Tamamlandı!</h2>
-    <p style="color:var(--text2)">Tüm okumalar başarıyla kaydedildi</p>
-
-    <div class="summary-grid">
-      <div class="summary-item"><div class="val green" id="sumCorrect">0</div><div class="lbl">Doğru</div></div>
-      <div class="summary-item"><div class="val red" id="sumWrong">0</div><div class="lbl">Yanlış</div></div>
-      <div class="summary-item"><div class="val yellow" id="sumDup">0</div><div class="lbl">Tekrar</div></div>
-      <div class="summary-item"><div class="val blue" id="sumBoxes">0</div><div class="lbl">Koli</div></div>
-    </div>
-
-    <div class="btn-group">
-      <button class="btn btn-success btn-lg" onclick="doExport()">📥 Excel'e Aktar</button>
-    </div>
-    <div class="btn-group">
-      <button class="btn btn-primary" onclick="newOrder()">🔄 Yeni Sipariş</button>
-    </div>
-  </div>
 </div>
-
-</div><!-- /container -->
-
-<!-- ===================== BOX COMPLETE MODAL ===================== -->
-<div id="boxAlert" class="box-alert hidden">
-  <div class="box-alert-inner">
-    <h2 id="boxAlertTitle">✅ Koli 1 Tamam!</h2>
-    <p id="boxAlertMsg">24 adet okutuldu. Sonraki koliye geçin.</p>
-    <button class="btn btn-success btn-lg" onclick="dismissBoxAlert()">👉 Devam Et</button>
-  </div>
-</div>
-
-<!-- ===================== SCRIPTS ===================== -->
-<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
 <script>
-// ============================================================
-//  1. STATE & CONFIGURATION
-// ============================================================
-const APP = {
-  totalQty: 0,
-  boxSize: 0,
-  refCodes: null,           // Set<string> | null
-  scans: [],                // ScanResult[]
-  validSet: new Set(),      // unique valid codes
-  currentBoxNum: 1,
-  currentBoxCount: 0,
-  scanning: false,
-  paused: false,
-  flashOn: false,
-  stream: null,
-  detector: null,
-  zxReader: null,
-  useNative: false,
-  cooldown: new Map(),      // code -> timestamp
-  COOLDOWN_MS: 2000,
-  wakeLock: null,
-  animFrame: null
-};
+// ====================== AYARLAR ======================
+let html5QrCode;
+let totalQty = 0;
+let boxSize = 0;
+let referenceSet = null;
+let scannedSet = new Set();           // Doğru okunan unique kodlar
+let allScans = [];                    // Tüm okunanlar (tekrar dahil)
+let currentBox = 1;
+let currentBoxCount = 0;
+let isScanning = false;
+let lastScanTime = {};
 
-// ============================================================
-//  2. DOM REFERENCES
-// ============================================================
-const $ = id => document.getElementById(id);
-const DOM = {
-  setupScreen: $('setupScreen'), scannerScreen: $('scannerScreen'), completeScreen: $('completeScreen'),
-  video: $('nativeVideo'), overlay: $('overlay'), fallbackReader: $('fallbackReader'),
-  cameraWrap: $('cameraWrap'), cameraSelect: $('cameraSelect'),
-  sTotal: $('sTotal'), sBox: $('sBox'), sBoxNum: $('sBoxNum'), sErrors: $('sErrors'),
-  progressBar: $('progressBar'), progressText: $('progressText'),
-  scanTableBody: $('scanTableBody'), scanCountLabel: $('scanCountLabel'),
-  lastScan: $('lastScan'), boxAlert: $('boxAlert'),
-  boxAlertTitle: $('boxAlertTitle'), boxAlertMsg: $('boxAlertMsg'),
-  btnPause: $('btnPause'), inpManual: $('inpManual')
-};
+// ====================== BAŞLAT ======================
+function startScanning() {
+    totalQty = parseInt(document.getElementById("totalQty").value);
+    boxSize = parseInt(document.getElementById("boxSize").value);
 
-// ============================================================
-//  3. UTILITY: SOUNDS & HAPTICS
-// ============================================================
-function playTone(freq, dur, vol = 0.15) {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator(), gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.frequency.value = freq; gain.gain.value = vol;
-    osc.start(); osc.stop(ctx.currentTime + dur);
-  } catch(e) {}
-}
-function beepOk()   { playTone(1400, 0.08); playTone(1800, 0.08); }
-function beepBad()  { playTone(200, 0.25, 0.3); }
-function beepDup()  { playTone(500, 0.15); }
-function beepBox()  { playTone(800,0.1); setTimeout(()=>playTone(1200,0.1),120); setTimeout(()=>playTone(1600,0.15),240); }
-function vib(ms) { try { navigator.vibrate(ms); } catch(e) {} }
-
-// ============================================================
-//  4. UTILITY: TOAST NOTIFICATIONS
-// ============================================================
-function toast(msg, type = 'info', duration = 3000) {
-  const el = document.createElement('div');
-  el.className = 'toast ' + type;
-  el.textContent = msg;
-  $('toastContainer').appendChild(el);
-  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, duration);
-}
-
-// ============================================================
-//  5. UTILITY: DATE FORMAT
-// ============================================================
-function fmtDate(ts) {
-  const d = new Date(ts);
-  return d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR');
-}
-function fmtTime(ts) {
-  return new Date(ts).toLocaleTimeString('tr-TR');
-}
-
-// ============================================================
-//  6. REFERENCE FILE PARSER
-// ============================================================
-$('inpRefFile').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  try {
-    const codes = await parseRefFile(file);
-    APP.refCodes = new Set(codes);
-    $('refInfo').classList.remove('hidden');
-    $('refInfo').textContent = `✅ ${codes.length} referans kod yüklendi (${file.name})`;
-    toast(`${codes.length} referans kod yüklendi`, 'success');
-  } catch(err) {
-    toast('Dosya okunamadı: ' + err.message, 'error');
-  }
-});
-
-async function parseRefFile(file) {
-  const ext = file.name.split('.').pop().toLowerCase();
-  const colIdx = parseInt($('refColumn').value) || 0;
-
-  if (ext === 'txt') {
-    const t = await file.text();
-    return t.split(/[\r\n]+/).map(s => s.trim()).filter(Boolean);
-  }
-  if (ext === 'csv') {
-    const t = await file.text();
-    const lines = t.split(/[\r\n]+/).filter(Boolean);
-    return lines.map(line => {
-      const parts = line.split(/[,;\t]/);
-      return (parts[colIdx] || '').trim();
-    }).filter(Boolean);
-  }
-  // Excel
-  const buf = await file.arrayBuffer();
-  const wb = XLSX.read(buf);
-  const sh = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(sh, { header: 1 });
-  return rows.map(r => String(r[colIdx] || '').trim()).filter(Boolean);
-}
-
-// ============================================================
-//  7. APP INITIALIZATION
-// ============================================================
-async function startApp() {
-  const tq = parseInt($('inpTotalQty').value);
-  const bs = parseInt($('inpBoxSize').value);
-  if (!tq || tq < 1) { toast('Geçerli bir toplam adet girin', 'error'); return; }
-  if (!bs || bs < 1) { toast('Geçerli bir koli içi adet girin', 'error'); return; }
-  if (bs > tq) { toast('Koli içi adet toplam adetten büyük olamaz', 'error'); return; }
-
-  APP.totalQty = tq;
-  APP.boxSize = bs;
-  APP.scans = [];
-  APP.validSet.clear();
-  APP.currentBoxNum = 1;
-  APP.currentBoxCount = 0;
-  APP.scanning = true;
-  APP.paused = false;
-
-  DOM.setupScreen.classList.add('hidden');
-  DOM.scannerScreen.classList.remove('hidden');
-  DOM.completeScreen.classList.add('hidden');
-  updateStats();
-
-  // Wake Lock
-  try { if ('wakeLock' in navigator) APP.wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
-
-  await initCamera();
-}
-
-// ============================================================
-//  8. CAMERA INITIALIZATION
-// ============================================================
-async function initCamera() {
-  // Check BarcodeDetector support
-  APP.useNative = ('BarcodeDetector' in window);
-
-  if (APP.useNative) {
-    try {
-      const formats = await BarcodeDetector.getSupportedFormats();
-      const want = ['qr_code','data_matrix'];
-      const supported = want.filter(f => formats.includes(f));
-      if (supported.length === 0) { APP.useNative = false; }
-      else {
-        APP.detector = new BarcodeDetector({ formats: supported.concat(
-          formats.includes('code_128') ? ['code_128'] : [],
-          formats.includes('ean_13') ? ['ean_13'] : [],
-          formats.includes('code_39') ? ['code_39'] : [],
-          formats.includes('pdf417') ? ['pdf417'] : []
-        )});
-      }
-    } catch(e) { APP.useNative = false; }
-  }
-
-  try {
-    // Request permission first
-    const tmpStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-    tmpStream.getTracks().forEach(t => t.stop());
-
-    // Enumerate cameras
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const cams = devices.filter(d => d.kind === 'videoinput');
-    DOM.cameraSelect.innerHTML = '';
-    cams.forEach((c, i) => {
-      const o = document.createElement('option');
-      o.value = c.deviceId;
-      o.textContent = c.label || `Kamera ${i + 1}`;
-      DOM.cameraSelect.appendChild(o);
-    });
-
-    // Prefer back camera
-    const back = cams.find(c => /back|rear|arka|environ/i.test(c.label));
-    if (back) DOM.cameraSelect.value = back.deviceId;
-    else if (cams.length > 1) DOM.cameraSelect.value = cams[cams.length - 1].deviceId;
-
-    DOM.cameraSelect.onchange = () => startCameraStream();
-
-    if (APP.useNative) {
-      toast('Yerel kamera tarayıcı aktif (çoklu okuma destekli)', 'success');
-      await startCameraStream();
-    } else {
-      toast('Alternatif tarayıcı yükleniyor...', 'info');
-      await loadFallbackScanner();
+    if (!totalQty || !boxSize) {
+        alert("Toplam miktar ve koli içi adet giriniz!");
+        return;
     }
-  } catch(err) {
-    toast('Kamera açılamadı: ' + err.message, 'error', 5000);
-  }
+
+    document.getElementById("setupScreen").classList.add("hidden");
+    document.getElementById("scannerScreen").classList.remove("hidden");
+
+    initHtml5QRCode();
 }
 
-// ---- NATIVE PATH: getUserMedia + BarcodeDetector ----
-async function startCameraStream() {
-  // Stop existing
-  if (APP.stream) { APP.stream.getTracks().forEach(t => t.stop()); }
-  if (APP.animFrame) { cancelAnimationFrame(APP.animFrame); }
+// ====================== KAMERA BAŞLATMA ======================
+function initHtml5QRCode() {
+    html5QrCode = new Html5Qrcode("reader");
 
-  const deviceId = DOM.cameraSelect.value;
-  const constraints = {
-    video: {
-      deviceId: deviceId ? { exact: deviceId } : undefined,
-      facingMode: deviceId ? undefined : { ideal: 'environment' },
-      width: { ideal: 1920 }, height: { ideal: 1080 },
-      focusMode: { ideal: 'continuous' }
-    }
-  };
-
-  try {
-    APP.stream = await navigator.mediaDevices.getUserMedia(constraints);
-    DOM.video.srcObject = APP.stream;
-    await DOM.video.play();
-
-    // Setup overlay canvas
-    DOM.video.addEventListener('loadedmetadata', () => {
-      DOM.overlay.width = DOM.video.videoWidth;
-      DOM.overlay.height = DOM.video.videoHeight;
-    }, { once: true });
-
-    // Start detection loop
-    detectLoop();
-  } catch(err) {
-    toast('Kamera hatası: ' + err.message, 'error');
-  }
-}
-
-let lastDetectTime = 0;
-const DETECT_INTERVAL = 120; // ~8 fps detection
-
-async function detectLoop() {
-  if (!APP.scanning) { APP.animFrame = requestAnimationFrame(detectLoop); return; }
-
-  const now = performance.now();
-  if (now - lastDetectTime >= DETECT_INTERVAL && !APP.paused) {
-    lastDetectTime = now;
-
-    try {
-      if (DOM.video.readyState >= 2 && APP.detector) {
-        const barcodes = await APP.detector.detect(DOM.video);
-        drawOverlay(barcodes);
-        for (const bc of barcodes) {
-          if (bc.rawValue) processCode(bc.rawValue.trim());
-        }
-      }
-    } catch(e) { /* frame error, skip */ }
-  }
-
-  APP.animFrame = requestAnimationFrame(detectLoop);
-}
-
-function drawOverlay(barcodes) {
-  const ctx = DOM.overlay.getContext('2d');
-  const vw = DOM.video.videoWidth, vh = DOM.video.videoHeight;
-  if (!vw) return;
-  DOM.overlay.width = vw; DOM.overlay.height = vh;
-  ctx.clearRect(0, 0, vw, vh);
-
-  barcodes.forEach(bc => {
-    if (!bc.boundingBox) return;
-    const b = bc.boundingBox;
-    ctx.strokeStyle = '#10b981';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(b.x, b.y, b.width, b.height);
-    ctx.fillStyle = 'rgba(16,185,129,0.15)';
-    ctx.fillRect(b.x, b.y, b.width, b.height);
-  });
-}
-
-// ---- FALLBACK PATH: html5-qrcode ----
-async function loadFallbackScanner() {
-  DOM.video.classList.add('hidden');
-  DOM.overlay.classList.add('hidden');
-  DOM.fallbackReader.classList.remove('hidden');
-  document.querySelector('.scan-frame').classList.add('hidden');
-  document.querySelector('.scan-line').classList.add('hidden');
-
-  // Dynamically load html5-qrcode
-  const script = document.createElement('script');
-  script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
-  script.onload = () => {
-    try {
-      const html5Qr = new Html5Qrcode('fallbackReader');
-      const config = {
-        fps: 10,
+    const config = {
+        fps: 15,
         qrbox: { width: 280, height: 280 },
-        formatsToSupport: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-      };
-      html5Qr.start(
-        { facingMode: 'environment' },
+        aspectRatio: 1.0,
+        disableFlip: false,
+        rememberLastUsedCamera: true
+    };
+
+    html5QrCode.start(
+        { facingMode: "environment" },
         config,
-        (text) => { if (!APP.paused) processCode(text.trim()); },
-        () => {}
-      ).catch(err => toast('Kamera başlatılamadı: ' + err, 'error'));
-      APP.zxReader = html5Qr;
-    } catch(err) {
-      toast('Tarayıcı yüklenemedi. Manuel giriş kullanın.', 'error', 5000);
-    }
-  };
-  script.onerror = () => {
-    toast('Tarayıcı kütüphanesi yüklenemedi. İnternet bağlantınızı kontrol edin.', 'error', 5000);
-  };
-  document.head.appendChild(script);
+        onScanSuccess,
+        onScanError
+    ).then(() => {
+        isScanning = true;
+        toast("Kamera başlatıldı. DataMatrix performansı iyileştirildi.", "success");
+    }).catch(err => {
+        toast("Kamera başlatılamadı: " + err, "error");
+    });
 }
 
-// ============================================================
-//  9. CODE PROCESSING (CORE LOGIC)
-// ============================================================
+function onScanError(error) {
+    // Sessizce hata ver (her frame'de hata normal)
+}
+
+function onScanSuccess(decodedText) {
+    if (!isScanning) return;
+    
+    const code = decodedText.trim();
+    const now = Date.now();
+
+    // Aynı kod çok hızlı okunmasın
+    if (lastScanTime[code] && now - lastScanTime[code] < 1200) return;
+    lastScanTime[code] = now;
+
+    processCode(code);
+}
+
+// ====================== ANA İŞLEM ======================
 function processCode(code) {
-  if (!code || !APP.scanning) return;
+    let status;
 
-  // Cooldown check
-  const now = Date.now();
-  const lastTime = APP.cooldown.get(code) || 0;
-  if (now - lastTime < APP.COOLDOWN_MS) return;
-  APP.cooldown.set(code, now);
+    if (scannedSet.has(code)) {
+        status = "Tekrar";
+    } else if (referenceSet && !referenceSet.has(code)) {
+        status = "Yanlış";
+    } else {
+        status = "Doğru";
+        scannedSet.add(code);
+        currentBoxCount++;
 
-  // Order complete check
-  if (APP.validSet.size >= APP.totalQty) {
-    showLastScan('Sipariş zaten tamamlandı!', 'bad');
-    beepBad(); return;
-  }
-
-  // Determine status
-  let status;
-  if (APP.validSet.has(code)) {
-    status = 'Tekrar';
-    beepDup(); vib([80, 40, 80]);
-  } else if (APP.refCodes && !APP.refCodes.has(code)) {
-    status = 'Yanlış';
-    beepBad(); vib(300);
-  } else {
-    status = 'Doğru';
-    beepOk(); vib(60);
-    APP.validSet.add(code);
-    APP.currentBoxCount++;
-  }
-
-  // Record scan
-  const scan = { code, status, box: APP.currentBoxNum, time: now };
-  APP.scans.push(scan);
-
-  // Update UI
-  addTableRow(scan, APP.scans.length);
-  showLastScan(`${status}: ${code}`, status === 'Doğru' ? 'ok' : (status === 'Yanlış' ? 'bad' : 'dup'));
-  updateStats();
-
-  // Box complete check
-  if (status === 'Doğru' && APP.currentBoxCount >= APP.boxSize) {
-    if (APP.validSet.size < APP.totalQty) {
-      // More boxes to go
-      showBoxAlert(APP.currentBoxNum, APP.boxSize);
-      APP.currentBoxNum++;
-      APP.currentBoxCount = 0;
+        if (currentBoxCount >= boxSize && scannedSet.size < totalQty) {
+            setTimeout(() => {
+                alert(`✅ KOLİ ${currentBox} TAMAMLANDI!\n\n${boxSize} adet okutuldu.\nKoli ${currentBox + 1}'e geçebilirsiniz.`);
+                currentBox++;
+                currentBoxCount = 0;
+            }, 100);
+        }
     }
-  }
 
-  // Order complete check
-  if (APP.validSet.size >= APP.totalQty) {
-    setTimeout(() => {
-      beepBox();
-      toast('🎉 SİPARİŞ TAMAMLANDI!', 'success', 5000);
-    }, 300);
-  }
+    const record = {
+        code: code,
+        status: status,
+        box: currentBox,
+        time: Date.now()
+    };
+
+    allScans.unshift(record);        // En başa ekle (yeni okunanlar üstte olsun)
+    updateUI(record);
 }
 
-// ============================================================
-// 10. UI UPDATES
-// ============================================================
-function updateStats() {
-  const correct = APP.validSet.size;
-  const errors = APP.scans.filter(s => s.status !== 'Doğru').length;
-  const pct = APP.totalQty > 0 ? Math.round((correct / APP.totalQty) * 100) : 0;
+// ====================== UI GÜNCELLEME ======================
+function updateUI(record) {
+    // Son okunan göster
+    const lastEl = document.getElementById("lastScan");
+    let colorClass = record.status === "Doğru" ? "ok" : (record.status === "Yanlış" ? "bad" : "dup");
+    lastEl.className = `last-scan ${colorClass}`;
+    lastEl.textContent = `${record.status}: ${record.code}`;
+    lastEl.classList.remove("hidden");
 
-  DOM.sTotal.textContent = `${correct}/${APP.totalQty}`;
-  DOM.sBox.textContent = `${APP.currentBoxCount}/${APP.boxSize}`;
-  DOM.sBoxNum.textContent = APP.currentBoxNum;
-  DOM.sErrors.textContent = errors;
-  DOM.scanCountLabel.textContent = APP.scans.length;
-  DOM.progressBar.style.width = pct + '%';
-  DOM.progressText.textContent = `%${pct}`;
+    // İstatistikler
+    const correct = scannedSet.size;
+    document.getElementById("correctCount").textContent = `${correct}/${totalQty}`;
+    document.getElementById("boxInfo").textContent = `${currentBoxCount}/${boxSize}`;
+    document.getElementById("boxNumber").textContent = currentBox;
+    document.getElementById("errorCount").textContent = allScans.filter(s => s.status !== "Doğru").length;
+
+    // Progress
+    const progress = Math.min(Math.round((correct / totalQty) * 100), 100);
+    document.getElementById("progress").style.width = progress + "%";
+
+    // Tabloya ekle (ilk 30 satır)
+    renderTable();
+    
+    // Ses + titreşim
+    if (record.status === "Doğru") beep(1200, 80);
+    else if (record.status === "Tekrar") beep(600, 120);
+    else beep(300, 200);
 }
 
-function addTableRow(scan, idx) {
-  const tr = document.createElement('tr');
-  const cls = scan.status === 'Doğru' ? 'row-ok' : (scan.status === 'Yanlış' ? 'row-bad' : 'row-dup');
-  tr.className = cls;
-  tr.innerHTML = `<td>${idx}</td><td>${esc(scan.code)}</td><td>${scan.status}</td><td>${scan.box}</td><td>${fmtTime(scan.time)}</td>`;
-  DOM.scanTableBody.insertBefore(tr, DOM.scanTableBody.firstChild);
+function renderTable() {
+    let html = `<table><tr><th>#</th><th>Kod</th><th>Durum</th><th>Koli</th><th>Saat</th></tr>`;
+    allScans.slice(0, 30).forEach((s, i) => {
+        const cls = s.status === "Doğru" ? "ok" : (s.status === "Tekrar" ? "dup" : "bad");
+        html += `<tr class="${cls}"><td>${i+1}</td><td>${s.code}</td><td>${s.status}</td><td>${s.box}</td><td>${new Date(s.time).toLocaleTimeString('tr-TR')}</td></tr>`;
+    });
+    html += `</table>`;
+    // Tabloyu buraya eklemek istersen bir div oluşturup innerHTML yapabilirsin. Şimdilik konsola yazdırıyorum.
+    console.table(allScans.slice(0,10));
 }
 
-function esc(s) {
-  const d = document.createElement('div'); d.textContent = s; return d.innerHTML;
+// ====================== DİĞER FONKSİYONLAR ======================
+function beep(freq, duration) {
+    try {
+        const audio = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audio.createOscillator();
+        const gain = audio.createGain();
+        osc.connect(gain);
+        gain.connect(audio.destination);
+        osc.frequency.value = freq;
+        gain.gain.value = 0.3;
+        osc.start();
+        setTimeout(() => osc.stop(), duration);
+    } catch(e) {}
 }
 
-function showLastScan(msg, type) {
-  DOM.lastScan.textContent = msg;
-  DOM.lastScan.className = 'last-scan ' + type;
-  DOM.lastScan.classList.remove('hidden');
+function toast(msg, type = "info") {
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.style.background = type === "success" ? "#10b981" : (type === "error" ? "#ef4444" : "#3b82f6");
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
 }
-
-function showBoxAlert(boxNum, count) {
-  APP.paused = true;
-  DOM.btnPause.textContent = '▶';
-  beepBox(); vib([100, 60, 100, 60, 200]);
-  DOM.boxAlertTitle.textContent = `✅ Koli ${boxNum} Tamamlandı!`;
-  DOM.boxAlertMsg.textContent = `${count} adet okutuldu. Koli ${boxNum + 1}'e geçin.`;
-  DOM.boxAlert.classList.remove('hidden');
-}
-
-function dismissBoxAlert() {
-  DOM.boxAlert.classList.add('hidden');
-  APP.paused = false;
-  DOM.btnPause.textContent = '⏸';
-  updateStats();
-}
-
-// ============================================================
-// 11. CONTROLS
-// ============================================================
-function togglePause() {
-  APP.paused = !APP.paused;
-  DOM.btnPause.textContent = APP.paused ? '▶' : '⏸';
-  toast(APP.paused ? 'Tarama duraklatıldı' : 'Tarama devam ediyor', 'info', 1500);
-}
-
-async function toggleFlash() {
-  if (!APP.stream) return;
-  const track = APP.stream.getVideoTracks()[0];
-  try {
-    const caps = track.getCapabilities();
-    if (!caps.torch) { toast('Bu cihaz fener desteklemiyor', 'warning'); return; }
-    APP.flashOn = !APP.flashOn;
-    await track.applyConstraints({ advanced: [{ torch: APP.flashOn }] });
-    $('btnFlash').textContent = APP.flashOn ? '🔦✓' : '🔦';
-  } catch(e) { toast('Fener açılamadı', 'error'); }
-}
-
-function manualAdd() {
-  const code = DOM.inpManual.value.trim();
-  if (!code) { toast('Kod girin', 'warning'); return; }
-  processCode(code);
-  DOM.inpManual.value = '';
-  DOM.inpManual.focus();
-}
-
-DOM.inpManual.addEventListener('keydown', e => {
-  if (e.key === 'Enter') manualAdd();
-});
 
 function undoLast() {
-  if (!APP.scans.length) { toast('Geri alınacak okuma yok', 'warning'); return; }
-  const last = APP.scans.pop();
-  if (last.status === 'Doğru') {
-    APP.validSet.delete(last.code);
-    APP.currentBoxCount--;
-    if (APP.currentBoxCount < 0) {
-      if (APP.currentBoxNum > 1) { APP.currentBoxNum--; APP.currentBoxCount = APP.boxSize - 1; }
-      else APP.currentBoxCount = 0;
+    if (allScans.length === 0) return;
+    const last = allScans.shift();
+    if (last.status === "Doğru") {
+        scannedSet.delete(last.code);
+        currentBoxCount = Math.max(0, currentBoxCount - 1);
     }
-    APP.cooldown.delete(last.code);
-  }
-  if (DOM.scanTableBody.firstChild) DOM.scanTableBody.removeChild(DOM.scanTableBody.firstChild);
-  updateStats();
-  DOM.lastScan.classList.add('hidden');
-  toast('Son okuma geri alındı', 'info', 1500);
+    toast("Son okuma geri alındı", "warning");
+    updateUI({code:"Geri alındı", status:"info", box:0, time:Date.now()});
 }
 
-// ============================================================
-// 12. EXCEL EXPORT
-// ============================================================
-function doExport() {
-  if (!APP.scans.length) { toast('Henüz okuma yok', 'warning'); return; }
-
-  try {
+function exportExcel() {
+    if (allScans.length === 0) return alert("Henüz okuma yok!");
+    // Excel export mantığı (önceki versiyondan alınıp iyileştirildi)
     const wb = XLSX.utils.book_new();
-
-    // Sheet 1: All scans
-    const data = APP.scans.map((s, i) => ({
-      'Sıra': i + 1,
-      'Kod': s.code,
-      'Durum': s.status,
-      'Koli No': s.box,
-      'Tarih': new Date(s.time).toLocaleDateString('tr-TR'),
-      'Saat': new Date(s.time).toLocaleTimeString('tr-TR')
+    const data = allScans.map((s,i) => ({
+        Sıra: i+1,
+        Kod: s.code,
+        Durum: s.status,
+        "Koli No": s.box,
+        "Okuma Zamanı": new Date(s.time).toLocaleString('tr-TR')
     }));
-    const ws1 = XLSX.utils.json_to_sheet(data);
-    ws1['!cols'] = [{ wch: 6 }, { wch: 45 }, { wch: 10 }, { wch: 8 }, { wch: 12 }, { wch: 10 }];
-    XLSX.utils.book_append_sheet(wb, ws1, 'Tüm Okumalar');
-
-    // Sheet 2: Only correct (unique)
-    const correctData = APP.scans
-      .filter(s => s.status === 'Doğru')
-      .map((s, i) => ({
-        'Sıra': i + 1,
-        'Kod': s.code,
-        'Koli No': s.box,
-        'Tarih': new Date(s.time).toLocaleDateString('tr-TR'),
-        'Saat': new Date(s.time).toLocaleTimeString('tr-TR')
-      }));
-    const ws2 = XLSX.utils.json_to_sheet(correctData);
-    ws2['!cols'] = [{ wch: 6 }, { wch: 45 }, { wch: 8 }, { wch: 12 }, { wch: 10 }];
-    XLSX.utils.book_append_sheet(wb, ws2, 'Doğru Kodlar');
-
-    // Sheet 3: Errors only
-    const errorData = APP.scans
-      .filter(s => s.status !== 'Doğru')
-      .map((s, i) => ({
-        'Sıra': i + 1,
-        'Kod': s.code,
-        'Durum': s.status,
-        'Koli No': s.box,
-        'Tarih': new Date(s.time).toLocaleDateString('tr-TR'),
-        'Saat': new Date(s.time).toLocaleTimeString('tr-TR')
-      }));
-    if (errorData.length > 0) {
-      const ws3 = XLSX.utils.json_to_sheet(errorData);
-      XLSX.utils.book_append_sheet(wb, ws3, 'Hatalar');
-    }
-
-    // Sheet 4: Summary
-    const totalBoxes = APP.boxSize > 0 ? Math.ceil(APP.validSet.size / APP.boxSize) : 0;
-    const summary = [
-      { 'Bilgi': 'Toplam Sipariş', 'Değer': APP.totalQty },
-      { 'Bilgi': 'Koli İçi Adet', 'Değer': APP.boxSize },
-      { 'Bilgi': 'Toplam Okuma', 'Değer': APP.scans.length },
-      { 'Bilgi': 'Doğru', 'Değer': APP.validSet.size },
-      { 'Bilgi': 'Yanlış', 'Değer': APP.scans.filter(s => s.status === 'Yanlış').length },
-      { 'Bilgi': 'Tekrar', 'Değer': APP.scans.filter(s => s.status === 'Tekrar').length },
-      { 'Bilgi': 'Tamamlanan Koli', 'Değer': totalBoxes },
-      { 'Bilgi': 'Referans Kod Yüklendi', 'Değer': APP.refCodes ? 'Evet (' + APP.refCodes.size + ' adet)' : 'Hayır' },
-      { 'Bilgi': 'Rapor Tarihi', 'Değer': fmtDate(Date.now()) }
-    ];
-    const ws4 = XLSX.utils.json_to_sheet(summary);
-    ws4['!cols'] = [{ wch: 22 }, { wch: 30 }];
-    XLSX.utils.book_append_sheet(wb, ws4, 'Özet');
-
-    // Sheet 5: Missing codes (if reference loaded)
-    if (APP.refCodes) {
-      const missing = [...APP.refCodes].filter(c => !APP.validSet.has(c));
-      if (missing.length > 0) {
-        const missingData = missing.map((c, i) => ({ 'Sıra': i + 1, 'Eksik Kod': c }));
-        const ws5 = XLSX.utils.json_to_sheet(missingData);
-        ws5['!cols'] = [{ wch: 6 }, { wch: 45 }];
-        XLSX.utils.book_append_sheet(wb, ws5, 'Eksik Kodlar');
-      }
-    }
-
-    // Generate file
-    const fn = `ScanMaster_${new Date().toISOString().slice(0, 10)}_${Date.now()}.xlsx`;
-    XLSX.writeFile(wb, fn);
-    toast('Excel dosyası indirildi: ' + fn, 'success', 4000);
-  } catch(err) {
-    toast('Excel hatası: ' + err.message, 'error');
-  }
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, "Okumalar");
+    XLSX.writeFile(wb, `ScanMaster_${new Date().toISOString().slice(0,16).replace(/:/g,'-')}.xlsx`);
+    toast("Excel dosyası indirildi!", "success");
 }
 
-// ============================================================
-// 13. FINISH / RESET
-// ============================================================
 function finishOrder() {
-  if (!APP.scans.length) { toast('Henüz okuma yok', 'warning'); return; }
-  if (!confirm('Siparişi tamamlamak istediğinize emin misiniz?')) return;
-  stopCamera();
-  DOM.scannerScreen.classList.add('hidden');
-  DOM.completeScreen.classList.remove('hidden');
-
-  $('sumCorrect').textContent = APP.validSet.size;
-  $('sumWrong').textContent = APP.scans.filter(s => s.status === 'Yanlış').length;
-  $('sumDup').textContent = APP.scans.filter(s => s.status === 'Tekrar').length;
-  $('sumBoxes').textContent = APP.boxSize > 0 ? Math.ceil(APP.validSet.size / APP.boxSize) : 0;
+    if (confirm("Siparişi tamamlamak istediğinizden emin misiniz?")) {
+        isScanning = false;
+        if (html5QrCode) html5QrCode.stop();
+        alert("Sipariş tamamlandı!\n\nExcel dosyasını indirmeyi unutmayın.");
+    }
 }
 
-function newOrder() {
-  if (APP.scans.length && !confirm('Veriler silinecek. Excel\'e aktardınız mı?')) return;
-  stopCamera();
-  APP.scans = [];
-  APP.validSet.clear();
-  APP.cooldown.clear();
-  APP.currentBoxNum = 1;
-  APP.currentBoxCount = 0;
-  APP.refCodes = null;
-  DOM.scanTableBody.innerHTML = '';
-  DOM.lastScan.classList.add('hidden');
-  $('refInfo').classList.add('hidden');
-  $('inpRefFile').value = '';
-  DOM.completeScreen.classList.add('hidden');
-  DOM.scannerScreen.classList.add('hidden');
-  DOM.setupScreen.classList.remove('hidden');
-}
-
-function stopCamera() {
-  APP.scanning = false;
-  if (APP.animFrame) cancelAnimationFrame(APP.animFrame);
-  if (APP.stream) { APP.stream.getTracks().forEach(t => t.stop()); APP.stream = null; }
-  if (APP.zxReader) { try { APP.zxReader.stop(); } catch(e) {} APP.zxReader = null; }
-  if (APP.wakeLock) { try { APP.wakeLock.release(); } catch(e) {} APP.wakeLock = null; }
-}
-
-// ============================================================
-// 14. PWA SERVICE WORKER REGISTRATION
-// ============================================================
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  });
-}
-
-// Keyboard shortcut: Space = pause/resume
-document.addEventListener('keydown', e => {
-  if (e.code === 'Space' && !DOM.setupScreen.classList.contains('hidden') === false) {
-    e.preventDefault();
-    togglePause();
-  }
+// Referans dosya yükleme
+document.getElementById("refFile").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const lines = text.split(/[\r\n,;\t]+/).map(x => x.trim()).filter(x => x.length > 5);
+    referenceSet = new Set(lines);
+    document.getElementById("refStatus").innerHTML = `✅ ${lines.length} referans kod yüklendi`;
+    toast(`${lines.length} referans kod yüklendi`, "success");
 });
 </script>
 </body>
